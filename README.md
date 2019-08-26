@@ -53,4 +53,73 @@ To implement DGP in Tensorflow probability, we have made two classes:
     - __Updating the prior methid__: update_prior() method<br>
     After every training iterations, we have to update the prior to be the posterior, to compare it afterwards with the new posterior (needed to compute the loss in KL divergence term).
 The layer class can be seen as the following:
-<img src="https://github.com/Alonso94/GSoC-DGP/blob/master/DGP_layer.png" width="400">
+<img src="https://github.com/Alonso94/GSoC-DGP/blob/master/DGP_layer.png" width="400"><br>
+
+2.  __DGP class__:
+    We have to stack layers, and define the loss and prediction computational graph, to run the training process and the predict the ouput for corresponding inputs.<br>
+    The methods inside DGP class:<br>
+    -  __Initialization method__: init() function<br>
+    Define some parameters and calling other methods to build the model and the graph.
+    -  __Build model method__: build_model() function<br>
+    Stacking layers from input to output layer, by making an array of objects from the layer class (defining the parameters by passing parameters to the constructor). It need small improvement before deploying DGP.
+    -  ___Loss method__: loss() function<br>
+    Implements the following equations:<br>
+    <img src="https://github.com/Alonso94/GSoC-DGP/blob/master/eq17.png" width="800"><br>
+    The code to implement it:<br>
+    ```python
+        loss=0.0
+        kl_term=0.0
+        k=0
+        for layer in self.layers:
+            print(k)
+            k+=1
+            for i in range(layer.output_size):
+                kl=layer.posteriors[i].kl_divergence(layer.priors[i])
+                kl_term+=tf.reduce_mean(kl)
+            posteriors=layer.posteriors
+        lh_term=0.0
+        for posterior in posteriors:
+            lh=posterior.log_prob(self.Y)
+            lh=tf.reduce_sum(lh,axis=-1)
+            lh_term=tf.reduce_mean(lh)
+        loss = lh_term - kl_term
+        return loss
+    ```
+    
+    - __Training method__: train() function<br>
+    Iterating to train the DGP, by collecting a feed dictionary and compute the loss. Running the optimizer to minimize the loss in order.<br>
+    - __Prediction method__: predict() function<br>
+    Implements the following equation:<br>
+    <img src="https://github.com/Alonso94/GSoC-DGP/blob/master/eq15.png" width="800"><br>
+    The code to implement it:<br>
+    ```python
+        f_i=x
+        count=1
+        for layer in self.layers:
+            f_i=f_i.reshape((-1,1))
+            feed_dict={layer.input_placeholder:f_i}
+            for i in range(layer.output_size):
+                posterior=layer.posteriors[i]
+                mean=posterior.mean()
+                covariance=posterior.scale.matmul(posterior.scale.to_dense(), adjoint_arg=True)
+                scale=posterior.scale.to_dense()
+                m,cov,s=self.sess.run([mean,covariance,scale],feed_dict)
+                first_term=m
+                size=m.size
+                k=np.eye(size,dtype=np.float64)
+                z=np.zeros(size,dtype=np.float64)
+                e=np.random.multivariate_normal(z,k)
+                sqr=np.sqrt(cov)
+                print(sqr)
+                second_term= np.dot(sqr,e)                
+                layer_pred=first_term + second_term
+                f_i=layer_pred
+            count+=1
+            print("f_i",f_i)
+        Y=f_i
+    ```
+    This function is still under development, where we are getting now nans in the predictions, because of having zeros in the scale.
+    
+ ## Work to be done:
+   We (with the mentor) have to review the code, to check from where we are getting zeros in the scale of the posterior, which lead to nans in covariance and in the predictions, after that I have to clean the code, test it and prepare it to deploy in TFP.<br>
+   I will write a documenation for the work when I have a working version of the DGP, and hope it will part of the TFP.
