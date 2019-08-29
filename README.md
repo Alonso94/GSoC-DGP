@@ -17,7 +17,8 @@ As shown in the most of recent papers realted to DGPs, DGPs outperform GPs in pe
     - [Gaussian Process distribution](https://github.com/tensorflow/probability/blob/master/tensorflow_probability/python/distributions/gaussian_process.py)
     - [Gaussian Process Regression Model](https://github.com/tensorflow/probability/blob/master/tensorflow_probability/python/distributions/gaussian_process_regression_model.py)
     - [Variational Gaussian Porcess distribution](https://github.com/tensorflow/probability/blob/master/tensorflow_probability/python/distributions/variational_gaussian_process.py)
-2. Work on demonstratoins for the last parts; preparing colab's notebooks with comments explaining the work:<br>
+2. Work on demonstratoins for the last parts (reproducing some of the [TFP examples](https://github.com/tensorflow/probability/tree/master/tensorflow_probability/examples/jupyter_notebooks) to improve the understanding):<br>
+__Credit for this part goes to TFP team__<br>
     - [Gaussian process regression for toy data](https://github.com/Alonso94/GSoC-DGP/blob/master/Exact_gpr.ipynb):<br>
   Using Gaussian Process prior and train it to fit a disturbed sin wave, after that use Gaussian Process Regression model with the trained kernel to draw samples; result is in the following image<br>
     <img src="https://github.com/Alonso94/GSoC-DGP/blob/master/GSoC1.png" width="700"><br>
